@@ -6,6 +6,7 @@ import requests
 import aiohttp
 import re
 import json
+import time
 
 
 intents = discord.Intents.all()
@@ -82,27 +83,38 @@ async def on_member_remove(member):
 
 def check_new_video():
     # Make a request to the YouTube API to check for a new video
-    base_video_url = 'https://www.youtube.com/watch?v='
-    base_search_url = 'https://www.googleapis.com/youtube/v3/search?'
-
-    url = base_search_url + 'key={}&channelId={}&part=snippet,id&order=date&maxResults=1'.format(API_KEY, YOUTUBE_ID)
     response = requests.get(url)
     result = response.json()
     with open("data/YouTubedata.json","w") as f:
         json.dump(result, f)
-    try: 
+    try:       
         video_id = result['items'][0]['id']['videoId']
-        #second_video_id = result['items'][1]['id']['videoId']
-        # if video_id == second_video_id:
-        #     return None
-        return base_video_url + video_id
-    except (KeyError, IndexError):
-        return None
-    
+        
+        with open("data/video_id.json", "r") as read_file:
+            json_data = json.load(read_file)
+        json_value = json_data["video_id"]
+
+        if json_value == video_id:
+            return None,None
+        with open("data/video_id.json", "w") as file:
+            json.dump({"video_id": video_id}, file)
+        return base_video_url + video_id, video_id
+    except Exception as e:
+        print(f"An error occured, type error: {e}")
+
+
 @tasks.loop(seconds=30.0)  # adjust this as needed
 async def check_new_videos():
     channel = client.get_channel(channel_id)  # replace with your channel ID
-    message = check_new_video()
+    message, id_video = check_new_video()
+    print ("checking....")
+    time.sleep(5)
+    print(id_video)
+    # with open("data/video_id.json", "r") as f:
+    #     json_data = json.load(f)
+    # json_value = json_data["video_id"]
+    # if id_video  == json_value:
+    #     return None
     await channel.send(f"@everyone 2.0Transformers shared a new video\n {message}")
 
 
