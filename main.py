@@ -6,7 +6,7 @@ import requests
 import aiohttp
 import re
 import json
-import time
+import time,asyncio
 
 
 intents = discord.Intents.all()
@@ -43,62 +43,30 @@ async def on_member_remove(member):
     await channel.send(f"Goodbye {member}!", )
 
 
-# @tasks.loop(seconds = 30)
-# async def checkforvideos():
-#     with open("data/YouTubedata.json","r") as f:
-#         data = json.load(f)
-#     print ("checking....")
-
-#     # for youtube_channel in data:
-#     #     channel = f"https://www.youtube.com/channel/{youtube_channel}"
-#     #     html = requests.get(channel+"/videos").text
-#     #     try:
-#     #         latest_video_url = f"https://www.youtube.com/watch?v=" + re.search('(?<="videoId":").*?(?=")', html).group()
-#     #     except Exception as e:
-#     #         print("An error occured")
-#     async with aiohttp.ClientSession() as session:
-#         for youtube_channel in data:
-#             try:
-#                 url = f"https://www.googleapis.com/youtube/v3/search?key={API_KEY}&channelId={YOUTUBE_ID}&part=id&order=date&maxResults=1"
-#                 async with session.get(url) as resp:
-#                     r = await resp.json()
-#                     videoId = r['items'][0]['id']['videoId']
-#                     latest_video_url = f"https://www.youtube.com/watch?v={videoId}" 
-            
-#                 if not str(data[youtube_channel]["latest_video_url"]) == latest_video_url:
-#                     data[str(youtube_channel)]['latest_video_url'] = latest_video_url
-
-#                 with open("data/YouTubedata.json","w") as f:
-#                     json.dump(data, f) 
-
-#                 discord_channel_id = data[str(youtube_channel)]['notifying_discord_channel']
-#                 discord_channel = client.get_channel(int(discord_channel_id))   
-
-#                 msg = f"@everone {data[str(youtube_channel)]['channel_name']} Just Uploaded A Video Or He is Live Go Check It Out: {latest_video_url}"
-
-#                 await discord_channel.send(msg)
-
-#             except Exception as e:
-#                 print(f"an error occured: {e}")
-
 def check_new_video():
     # Make a request to the YouTube API to check for a new video
     response = requests.get(url)
     result = response.json()
+    video_id = result['items'][0]['id']['videoId']
+    channel_title = result['items'][0]['snippet']['channelTitle']
+    description = result['items'][0]['snippet']['description']
     with open("data/YouTubedata.json","w") as f:
         json.dump(result, f)
     try:       
-        video_id = result['items'][0]['id']['videoId']
-        
         with open("data/video_id.json", "r") as read_file:
             json_data = json.load(read_file)
         json_value = json_data["video_id"]
+        print(f"json_value: {json_value}")
+        print(f"Video_id : {video_id}")
+        print(f"channel title: {channel_title}")
+        print(f"description: {description}")
 
         if json_value == video_id:
-            return None,None
+            return None,None,channel_title,description
+        
         with open("data/video_id.json", "w") as file:
             json.dump({"video_id": video_id}, file)
-        return base_video_url + video_id, video_id
+        return base_video_url + video_id, video_id, channel_title,description
     except Exception as e:
         print(f"An error occured, type error: {e}")
 
@@ -106,16 +74,13 @@ def check_new_video():
 @tasks.loop(seconds=30.0)  # adjust this as needed
 async def check_new_videos():
     channel = client.get_channel(channel_id)  # replace with your channel ID
-    message, id_video = check_new_video()
+    message, id_video,channel_title,caption = check_new_video()
     print ("checking....")
-    time.sleep(5)
+    await asyncio.sleep(5)
     print(id_video)
-    # with open("data/video_id.json", "r") as f:
-    #     json_data = json.load(f)
-    # json_value = json_data["video_id"]
-    # if id_video  == json_value:
-    #     return None
-    await channel.send(f"@everyone 2.0Transformers shared a new video\n {message}")
+    if message is None:
+        return None
+    await channel.send(f"@everyone {channel_title} shared a new video:'{caption}'\n {message}")
 
 
 @client.event
