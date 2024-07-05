@@ -2,11 +2,8 @@ from asyncio import tasks
 import discord 
 from  discord.ext import commands, tasks
 from apikey import *
-import requests
-import aiohttp
-import re
+import requests,json,asyncio
 import json
-import time,asyncio
 
 
 intents = discord.Intents.all()
@@ -49,7 +46,9 @@ def check_new_video():
     result = response.json()
     video_id = result['items'][0]['id']['videoId']
     channel_title = result['items'][0]['snippet']['channelTitle']
-    description = result['items'][0]['snippet']['description']
+    title = result['items'][0]['snippet']['title']
+    
+    
     with open("data/YouTubedata.json","w") as f:
         json.dump(result, f)
     try:       
@@ -59,28 +58,28 @@ def check_new_video():
         print(f"json_value: {json_value}")
         print(f"Video_id : {video_id}")
         print(f"channel title: {channel_title}")
-        print(f"description: {description}")
+        print(f"description: {title}")
 
         if json_value == video_id:
-            return None,None,channel_title,description
+            return None,None,channel_title,title
         
         with open("data/video_id.json", "w") as file:
             json.dump({"video_id": video_id}, file)
-        return base_video_url + video_id, video_id, channel_title,description
+        return base_video_url + video_id, video_id, channel_title,title
     except Exception as e:
         print(f"An error occured, type error: {e}")
 
 
 @tasks.loop(seconds=30.0)  # adjust this as needed
 async def check_new_videos():
-    channel = client.get_channel(channel_id)  # replace with your channel ID
+    channel = client.get_channel(channel_id)  # replace with your YouTube channel ID
     message, id_video,channel_title,caption = check_new_video()
     print ("checking....")
     await asyncio.sleep(5)
     print(id_video)
     if message is None:
         return None
-    await channel.send(f"@everyone {channel_title} shared a new video:'{caption}'\n {message}")
+    await channel.send(f"@everyone {channel_title} shared a new video: ' {caption} '\n {message}")
 
 
 @client.event
