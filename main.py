@@ -4,6 +4,7 @@ from  discord.ext import commands, tasks
 from apikey import *
 import requests,json,asyncio
 import json
+import datetime
 
 
 intents = discord.Intents.all()
@@ -40,10 +41,14 @@ async def on_member_remove(member):
     await channel.send(f"Goodbye {member}!", )
 
 
-def check_new_video():
-    # Make a request to the YouTube API to check for a new video
+def get_api():
     response = requests.get(url)
     result = response.json()
+    return result
+
+def check_new_video():
+    # Make a request to the YouTube API to check for a new video
+    result = get_api()
     video_id = result['items'][0]['id']['videoId']
     channel_title = result['items'][0]['snippet']['channelTitle']
     title = result['items'][0]['snippet']['title']
@@ -69,7 +74,6 @@ def check_new_video():
     except Exception as e:
         print(f"An error occured, type error: {e}")
 
-
 @tasks.loop(seconds=30.0)  # adjust this as needed
 async def check_new_videos():
     channel = client.get_channel(channel_id)  # replace with your YouTube channel ID
@@ -79,12 +83,49 @@ async def check_new_videos():
     print(id_video)
     if message is None:
         return None
-    await channel.send(f"@everyone {channel_title} shared a new video: ' {caption} '\n {message}")
+    result = get_api()
+    channel_pfp = result['items'][0]['snippet']['thumbnails']['default']['url']
+    await channel.send(f"@everyone {channel_title} shared a new video: ' {caption}'\n <{message}>",)
+
+
+
+#Loggin edited message
+@client.event
+async def on_message_edit(before, after):
+    current_time = datetime.datetime.utcnow().strftime("Date = %Y-%m-%d || Time = %H:%M:%S UTC")
+    channel = client.get_channel(log_channel)
+    embed = discord.Embed(
+        title = f"{before.author} edited a message in {before.channel.mention}",
+        description="",
+        color = 0x1abc9c
+    )
+    embed.set_author(name = str(before.author), icon_url = before.author.display_avatar.url)
+    embed.add_field(name="Before" ,value=before.content, inline=False)
+    embed.add_field(name= "After" ,value=after.content, inline=False)
+    embed.add_field(name = "User_id", value = before.author.mention, inline = False)
+    embed.set_footer(text= current_time)
+
+    await channel.send(embed = embed)
+
+#Loggin delted message
+@client.event
+async def on_message_delete(message):
+    channel = client.get_channel(1252240278257926207)
+    current_time = datetime.datetime.utcnow().strftime("Date = %Y-%m-%d || Time = %H:%M:%S UTC")
+    embed = discord.Embed(
+        title = f"{message.author.mention} message was deleted in {message.channel.mention}",
+        description = f"Deleted message = {message.content}",
+        color = discord.Color.red()
+    )
+    embed.set_author(name = str(message.author), icon_url = message.author.display_avatar.url)
+    embed.add_field(name = "User_id", value = message.author.mention, inline = False)
+    embed.set_footer(text= current_time)
+    await channel.send(embed=embed)
 
 
 @client.event
 async def on_ready():
-    check_new_videos.start()
+    #check_new_videos.start()
     print ("The bot is now ready for use")
     print("------------------------------")
 
