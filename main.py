@@ -1,10 +1,11 @@
 from asyncio import tasks
 import discord 
 from  discord.ext import commands, tasks
+from discord.ext.commands import has_permissions, MissingPermissions
 from apikey import *
 import requests,json,asyncio
 import json
-import datetime
+import datetime, time
 from googleapiclient.discovery import build
 
 intents = discord.Intents.all()
@@ -190,21 +191,117 @@ async def on_member_update(before, after):
 async def kick(ctx, member:discord.Member,*,reason = None):
     channel = client.get_channel(1252240278257926207)
     current_time = timestamp()
+    await member.kick(reason = reason)
+    embed = discord.Embed(color = discord.Color.red(),title = "**kicked**", description= "")
+    embed.add_field(name = f"Moderator/Admin: ", value = f"{ctx.author.mention}", inline =False)
+    embed.add_field(name =f"", value =f"""The user **{member}** has been kicked.\nReason = **{reason}**""", inline = True)
+    embed.set_author(name = str(member), icon_url = member.display_avatar.url)
+    embed.set_footer(text= current_time)
+    await channel.send(embed = embed)
+    await ctx.send(f"user {member} is kicked")
+
+@kick.error
+async def kick_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You don't have premission to kick members!")
+
+#ban member
+@client.command()
+@commands.has_permissions(ban_members = True)
+async def ban(ctx, member:discord.Member,*,reason = None):
+    channel = client.get_channel(1252240278257926207)
+    current_time = timestamp()
+    await member.ban(reason = reason)
+    embed = discord.Embed(color = discord.Color.red(),title = "**banned**", description= "")
+    embed.add_field(name = f"Moderator/Admin: ", value = f"{ctx.author.mention}", inline =False)
+    embed.add_field(name =f"", value =f"""The user **{member}** has been banned.\nReason = **{reason}**""", inline = True)
+    embed.set_author(name = str(member), icon_url = member.display_avatar.url)
+    embed.set_footer(text= current_time)
+    await channel.send(embed = embed)
+    await ctx.send(f"user {member} is banned")
+
+
+
+@ban.error
+async def ban_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You don't have premission to ban members!")
+
+
+@client.command()
+@commands.has_permissions(administrator = True)
+async def unban(ctx ,*, user: discord.User):
+    channel = client.get_channel(1252240278257926207)
+    current_time = timestamp()  # Replace with your timestamp function if needed
     try:
-        await member.kick(reason = reason)
-        embed = discord.Embed(color = discord.Color.red(),title = "", description= "")
-        embed.add_field(name ="Kicked", value =f"""The user  **{member}** has been kicked.\nReason = **{reason}**""", inline = True)
-        embed.set_author(name = str(member), icon_url = member.display_avatar.url)
-        embed.set_footer(text= current_time)
+        banned_users = ctx.guild.bans()
+        member_name, member_discriminator = discord.User.split("#")
+
+        async for ban_entry in banned_users:
+            user = ban_entry.user
+            if (user.name, user.discriminator) == (member_name, member_discriminator):
+                await ctx.guild.unban(user)
+                embed = discord.Embed(color=discord.Color.red(), title="**Unbanned**", description="")
+                embed.add_field(name="Moderator/Admin: ", value=f"{ctx.author.mention}", inline=False)
+                embed.add_field(name="", value=f"The user **{discord.User}** has been unbanned.\n", inline=True)
+                embed.set_author(name=str(discord.User), icon_url=user.display_avatar.url)
+                embed.set_footer(text=current_time)
+                await channel.send(embed=embed)
+                await ctx.send(f"Unbanned {user.mention}")
+                return
+                
+
+    except Exception as e :
+        embed = discord.Embed(color=discord.Color.red(), title="", description="")
+        embed.add_field(name="Error", value = f"User unbanning failed {e}",inline = True)
         await channel.send(embed = embed)
-    except:
-         await channel.send("Something went wrong")
+
+
+
+#timeout member
+@client.command()
+@commands.has_role("Mod")
+async def mute(ctx, member:discord.Member, duration = 0, unit = None):
+    roleobject = discord.utils.get(ctx.message.guild.roles,id=1263512433885188186)
+    await ctx.send(f":white_check_mark: Muted {member} for {duration}{unit}")
+    await member.add_roles(roleobject)
+    if unit == "s":
+        wait = 1 * duration
+        time.sleep(wait)
+    elif unit == "m":
+        wait = 60 * duration
+        time.sleep(wait)
+    await member.remove_roles(roleobject)
+    await ctx.send(f":white_check_mark: {member} was unmuted")
+
+
+# @client.command()
+# @commands.has_permissions(moderate_members = True)
+# async def timeout(ctx, member:discord.Member,duration: int ,*,reason = None):
+#     await member.timeout(duration = duration, reason = reason)
+#     channel = client.get_channel(1252240278257926207)
+#     current_time = timestamp()
+#     embed = discord.Embed(color = discord.Color.red(),title = "**timed out**", description= "")
+#     embed.add_field(name = f"Moderator/Admin: ", value = f"{ctx.author.mention}", inline =False)
+#     embed.add_field(name =f"", value =f"""The user **{member}** has been muted.\nReason = **{reason}**""", inline = True)
+#     embed.set_author(name = str(member), icon_url = member.display_avatar.url)
+#     embed.set_footer(text= current_time)
+#     await channel.send(embed = embed)
+
+#     await ctx.send(f"User {member.mention} is timed out for {duration} seconds.")
+
+# @timeout.error
+# async def ban_error(ctx, error):
+#     if isinstance(error, commands.MissingPermissions):
+#         await ctx.send("You don't have premission to ban members!")
 
 @client.event
 async def on_ready():
+    channel = client.get_channel(channel_id)
     #check_new_videos.start()
     print ("The bot is now ready for use")
     print("------------------------------")
+    await channel.send("Teletraan 1 online")
 
 client.run(token)
 
