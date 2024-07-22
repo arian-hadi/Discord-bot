@@ -140,7 +140,7 @@ async def on_message_delete(message):
     channel = client.get_channel(1252240278257926207)
     current_time = timestamp()
     embed = discord.Embed(
-        title = f"{message.author.mention} message was deleted in {message.channel.mention}",
+        title = f"Message was deleted in {message.channel.mention}",
         description = f"Deleted message = {message.content}",
         color = discord.Color.red()
     )
@@ -213,7 +213,8 @@ async def ban(ctx, member:discord.Member,*,reason = None):
     current_time = timestamp()
     await member.ban(reason = reason)
     embed = discord.Embed(color = discord.Color.red(),title = "**banned**", description= "")
-    embed.add_field(name = f"Moderator/Admin: ", value = f"{ctx.author.mention}", inline =False)
+    embed.add_field(name = f"Admin: ", value = f"{ctx.author.mention}", inline =False)
+    embed.add_field(name = f"Banned user ID: ", value = f"{member.id}", inline =False)
     embed.add_field(name =f"", value =f"""The user **{member}** has been banned.\nReason = **{reason}**""", inline = True)
     embed.set_author(name = str(member), icon_url = member.display_avatar.url)
     embed.set_footer(text= current_time)
@@ -228,40 +229,42 @@ async def ban_error(ctx, error):
         await ctx.send("You don't have premission to ban members!")
 
 
-@client.command()
-@commands.has_permissions(administrator = True)
-async def unban(ctx ,*, user: discord.User):
-    channel = client.get_channel(1252240278257926207)
-    current_time = timestamp()  # Replace with your timestamp function if needed
-    try:
-        banned_users = ctx.guild.bans()
-        member_name, member_discriminator = discord.User.split("#")
 
-        async for ban_entry in banned_users:
-            user = ban_entry.user
-            if (user.name, user.discriminator) == (member_name, member_discriminator):
-                await ctx.guild.unban(user)
-                embed = discord.Embed(color=discord.Color.red(), title="**Unbanned**", description="")
-                embed.add_field(name="Moderator/Admin: ", value=f"{ctx.author.mention}", inline=False)
-                embed.add_field(name="", value=f"The user **{discord.User}** has been unbanned.\n", inline=True)
-                embed.set_author(name=str(discord.User), icon_url=user.display_avatar.url)
-                embed.set_footer(text=current_time)
-                await channel.send(embed=embed)
-                await ctx.send(f"Unbanned {user.mention}")
-                return
+@client.command(name="unban")
+@commands.guild_only()
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, userId: int):
+    channel = client.get_channel(1252240278257926207)
+    current_time = timestamp() 
+
+    try:
+        user = await client.fetch_user(userId)
+        await ctx.guild.unban(user)
+        embed = discord.Embed(
+            title="Unbanned",
+            description=f"User {user.mention} has been unbanned",
+            color=discord.Color.green()
+        )
+        embed.add_field(name = f"Admin: ", value = f"{ctx.author.mention}", inline =False)
+        embed.set_footer(text=current_time)
+        await channel.send(embed=embed)
+        await ctx.send(f"User {user.mention} has been unbanned")
+    except discord.NotFound:
+        await ctx.send(f"User with ID {userId} not found.")
+    except discord.HTTPException:
+        await ctx.send(f"Failed to unban user with ID {userId}.")
+
+
                 
 
-    except Exception as e :
-        embed = discord.Embed(color=discord.Color.red(), title="", description="")
-        embed.add_field(name="Error", value = f"User unbanning failed {e}",inline = True)
-        await channel.send(embed = embed)
 
 
 
 #timeout member
 @client.command()
 @commands.has_role("Mod")
-async def mute(ctx, member:discord.Member, duration = 0, unit = None):
+async def mute(ctx, member:discord.Member, duration : str = "0", unit: str = None):
+    duration = int(duration)
     roleobject = discord.utils.get(ctx.message.guild.roles,id=1263512433885188186)
     await ctx.send(f":white_check_mark: Muted {member} for {duration}{unit}")
     await member.add_roles(roleobject)
@@ -273,6 +276,7 @@ async def mute(ctx, member:discord.Member, duration = 0, unit = None):
         time.sleep(wait)
     await member.remove_roles(roleobject)
     await ctx.send(f":white_check_mark: {member} was unmuted")
+
 
 
 # @client.command()
@@ -294,6 +298,7 @@ async def mute(ctx, member:discord.Member, duration = 0, unit = None):
 # async def ban_error(ctx, error):
 #     if isinstance(error, commands.MissingPermissions):
 #         await ctx.send("You don't have premission to ban members!")
+
 
 @client.event
 async def on_ready():
