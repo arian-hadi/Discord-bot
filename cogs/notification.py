@@ -13,8 +13,6 @@ class Notification(commands.Cog):
     async def check_new_videos(self):
         channel = self.client.get_channel(channel_id)  # replace with your YouTube channel ID
         message, id_video,channel_title,caption = check_new_video()
-        #hyperlink_format = f'<a href="{message}">{caption}</a>'
-        #link_text = hyperlink_format.format
         print ("checking....")
         await asyncio.sleep(5)
         print(id_video)
@@ -32,7 +30,6 @@ class Notification(commands.Cog):
         embed.set_author(name = channel_title, icon_url = channel_pfp)
         embed.set_thumbnail(url = channel_pfp)
         embed.set_image(url = channel_thumbnail)
-        #await channel.send(embed = embed)
         await channel.send(
             content = f"@everyone {channel_title} shared a new video: ' {caption}'\n <{message}>",
             embed = embed         
