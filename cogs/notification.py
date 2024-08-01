@@ -6,7 +6,7 @@ import asyncio
 
 class Notification(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.client = client        
         self.check_new_videos.start()
 
     @tasks.loop(seconds = 30.0)
@@ -34,6 +34,7 @@ class Notification(commands.Cog):
             content = f"@everyone {channel_title} shared a new video: ' {caption}'\n <{message}>",
             embed = embed         
         )
+
 
 async def setup(client):
     await client.add_cog(Notification(client))

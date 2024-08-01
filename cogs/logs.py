@@ -1,6 +1,6 @@
 import discord 
 from discord.ext import commands
-from apikey import channel_id
+from apikey import channel_id, log_channel
 from utils import timestamp,get_channel_id
 
 
@@ -11,7 +11,7 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        channel = get_channel_id(self.client, channel_id)
+        channel = get_channel_id(self.client, log_channel)
         current_time = timestamp()
         embed = discord.Embed(
             title = f"Message was deleted in {message.channel.mention}",
@@ -28,7 +28,7 @@ class Logs(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self,before, after):
         current_time = timestamp()
-        channel = get_channel_id(self.client, channel_id)
+        channel = get_channel_id(self.client, log_channel)
         embed = discord.Embed(
             title = f"{before.author} edited a message in {before.channel.mention}",
             description="",
@@ -46,7 +46,7 @@ class Logs(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self,before, after):
         current_time = timestamp()
-        channel = get_channel_id(self.client,1252240278257926207)
+        channel = get_channel_id(self.client,log_channel)
         if len(before.roles) > len(after.roles):
             role = next(role for role in before.roles if role not in after.roles)
             embed = discord.Embed(
