@@ -51,5 +51,5 @@ try :
         channel_pfp = response['items'][0]['snippet']['thumbnails']['default']['url']
         return channel_pfp
     
-except:
-    pass
+except IndexError:
+    print("You have reached your daily api request")

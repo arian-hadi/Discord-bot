@@ -13,7 +13,6 @@ client = commands.Bot(command_prefix = '!', intents=intents)
 @client.event
 async def on_ready():
     channel = client.get_channel(channel_id)
-    # check_new_videos.start()
     print("The bot is now ready for use")
     print("------------------------------")
     await channel.send(f"{client.user} online")
