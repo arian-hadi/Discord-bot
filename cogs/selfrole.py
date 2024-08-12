@@ -1,7 +1,11 @@
+
 import discord
 from discord.ext import commands
 from apikey import log_channel
 
+intents = discord.Intents.all()
+
+client = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
 class RoleButtons(discord.ui.View):
     @discord.ui.button(label='Videostar', custom_id='Role_1', style=discord.ButtonStyle.secondary)
@@ -63,5 +67,4 @@ class Roles(commands.Cog):
 
 async def setup(client):
     await client.add_cog(Roles(client))
-
 
