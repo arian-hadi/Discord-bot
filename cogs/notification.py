@@ -7,7 +7,7 @@ import asyncio
 class Notification(commands.Cog):
     def __init__(self, client):
         self.client = client        
-        self.check_new_videos.start()
+        #self.check_new_videos.start()
 
     @tasks.loop(seconds = 30.0)
     async def check_new_videos(self):

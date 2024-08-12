@@ -8,7 +8,7 @@ class Greetings(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_join(self,member):
-            channel = self.client.get_channel(channel_id)
+            channel = self.client.get_channel(1271167183048933501)
             if channel:
                 await channel.send(f"{member.mention}")
                 myembed = discord.Embed(
