@@ -18,24 +18,24 @@ class RoleButtons(discord.ui.View):
                 custom_id = f"Role_{role_id}" ,
                 style = discord.ButtonStyle.secondary
                 )
+          
             
-            button.callback = self.interaction_check  # Assign the callback method to the button
+            button.callback = self.button_callback  # Assign the callback method to the button
             self.add_item(button)
   
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        role_id = int(interaction.custom_id.split("_")[1])
+
+    async def button_callback(self, interaction: discord.Interaction):
+        role_id = int(interaction.data['custom_id'].split("_")[1])
         user = interaction.user
         role = user.guild.get_role(role_id)
 
         if role in user.roles:
             await user.remove_roles(role)
-            await interaction.response.send_message(f"You have removed the {role.name} role !", ephemeral = True)
-        
+            await interaction.response.send_message(f"You have removed the {role.name} role!", ephemeral=True)
         else:
             await user.add_roles(role)
-            await interaction.response.send_message(f"You have added the {role.name} role !", ephemeral= True)
-        
-        return True
+            await interaction.response.send_message(f"You have added the {role.name} role!", ephemeral=True)
+
 
 class Roles(commands.Cog):
     def __init__(self, client):

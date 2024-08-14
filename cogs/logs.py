@@ -27,6 +27,8 @@ class Logs(commands.Cog):
     #Loggin edited message
     @commands.Cog.listener()
     async def on_message_edit(self,before, after):
+        if before.author == self.client.user or before.content == after.content:
+            return
         current_time = timestamp()
         channel = get_channel_id(self.client, log_channel)
         embed = discord.Embed(
@@ -45,6 +47,8 @@ class Logs(commands.Cog):
     #role_update and username update
     @commands.Cog.listener()
     async def on_member_update(self,before, after):
+        # if before.author == self.client.user:         
+        #  return
         current_time = timestamp()
         channel = get_channel_id(self.client,log_channel)
         if len(before.roles) > len(after.roles):
