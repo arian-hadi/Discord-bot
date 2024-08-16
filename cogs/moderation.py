@@ -136,6 +136,27 @@ class Moderation(commands.Cog):
             await ctx.send("You don't have premission to timeout members")
 
 
+    #remove timeout
+    @commands.command()
+    @commands.has_permissions(moderate_members = True)
+    async def untimeout(self, ctx, member: discord.Member):
+        current_time =  timestamp()
+        channel = get_channel_id(self.client, mod_log_channel)
+        try:
+            embed = discord.Embed(
+                title = "Timeout removed!",
+                description= f"User {member.mention} time out is removed",
+                color=discord.Color.green()
+            )
+            embed.add_field(name = "Admin:", value = f"{ctx.author.mention}", inline = False)
+            embed.set_footer(text = current_time)  
+            await member.timeout(None)
+            await channel.send(embed = embed)
+            await ctx.send(f"Member {member.mention} time out has been removed")
+        except Exception as e:
+            await ctx.send(f"An error occured: {str(e)}")
+
+
 
 async def setup(client):
     await client.add_cog(Moderation(client))
