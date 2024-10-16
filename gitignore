@@ -1,0 +1,5 @@
+venv/
+apikey.py
+YouTubedata.json
+data/
+temp.py
