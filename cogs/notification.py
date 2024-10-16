@@ -4,6 +4,7 @@ from apikey import channel_id, YOUTUBE_ID
 from utils import check_new_video, get_pfp, get_api
 import asyncio
 
+
 class Notification(commands.Cog):
     def __init__(self, client):
         self.client = client        
